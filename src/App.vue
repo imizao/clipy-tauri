@@ -1,56 +1,67 @@
-<script setup lang="ts">
-    import {reactive} from "vue"
-    import {writeText, readText} from '@tauri-apps/api/clipboard';
-    import Greet from "./components/Greet.vue";
-
-    const state = reactive({
-        textList: []
-    });
-
-    async function clipboardTextFn() {
-        const clipboardText = await readText();
-        console.log(clipboardText);
-    }
-
-    async function writeTextFn() {
-        await writeText('Tauri is awesome!');
-        const clipboardText = await readText();
-        console.log(clipboardText);
-    }
-
-</script>
-
 <template>
-    <div class="container">
-        <h1>Welcome to Tauri!</h1>
-
-        <div class="row">
-            <a href="https://vitejs.dev" target="_blank">
-                <img src="/vite.svg" class="logo vite" alt="Vite logo" />
-            </a>
-            <a href="https://tauri.app" target="_blank">
-                <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
-            </a>
-            <a href="https://vuejs.org/" target="_blank">
-                <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-            </a>
-        </div>
-
-        <Greet />
-        <div class="card">
-            <button type="button" @click="clipboardTextFn()">clipboardTextFn</button>
-            <button type="button" @click="writeTextFn()">writeTextFn</button>
-        </div>
-    </div>
+  <div class="container">
+    <n-layout position="absolute" has-sider>
+      <n-layout content-style="padding: 24px;" :native-scrollbar="false">
+        <n-list hoverable clickable>
+          <!-- <Greet /> -->
+          <n-list-item v-for="item in state.textList" :key="item">
+            {{ item }}
+          </n-list-item>
+        </n-list>
+        <!-- <div class="card">
+          <button type="button" @click="clipboardTextFn()">clipboardTextFn</button>
+          <button type="button" @click="writeTextFn()">writeTextFn</button>
+        </div> -->
+      </n-layout>
+    </n-layout>
+  </div>
 </template>
 
+<script setup lang="ts">
+import { reactive, onMounted } from "vue";
+import Greet from "./components/Greet.vue";
+import { writeText, readText } from "@tauri-apps/api/clipboard";
+import { emit, listen } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/tauri";
+
+const state = reactive({
+  textList: [] as any,
+});
+
+async function listen_to_clipboard() {
+  const unlisten = await listen("clipboard", (event: any) => {
+    // event.payload 才是实际的结构体
+    let timer;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      clipboardTextFn();
+    },100)
+  });
+}
+
+onMounted(() => {
+  listen_to_clipboard();
+});
+
+async function clipboardTextFn() {
+  const clipboardText = await readText();
+  state.textList.push(clipboardText);
+  console.log(clipboardText);
+}
+
+async function writeTextFn() {
+  await writeText("Tauri is awesome!");
+  const clipboardText = await readText();
+  console.log(clipboardText);
+}
+</script>
+
 <style scoped>
-    .logo.vite:hover {
-        filter: drop-shadow(0 0 2em #747bff);
-    }
+.logo.vite:hover {
+  filter: drop-shadow(0 0 2em #747bff);
+}
 
-    .logo.vue:hover {
-        filter: drop-shadow(0 0 2em #249b73);
-    }
-
+.logo.vue:hover {
+  filter: drop-shadow(0 0 2em #249b73);
+}
 </style>
