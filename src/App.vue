@@ -4,7 +4,7 @@
       <n-layout content-style="padding: 24px;" :native-scrollbar="false">
         <n-list hoverable clickable>
           <!-- <Greet /> -->
-          <n-list-item v-for="item in state.textList" :key="item">
+          <n-list-item v-for="item in state.textList" @click="writeTextFn(item)" :key="item">
             {{ item }}
           </n-list-item>
         </n-list>
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import { reactive, onMounted } from "vue";
-import Greet from "./components/Greet.vue";
+// import Greet from "./components/Greet.vue";
 import { writeText, readText } from "@tauri-apps/api/clipboard";
 import { emit, listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
@@ -29,7 +29,7 @@ const state = reactive({
 });
 
 async function listen_to_clipboard() {
-  const unlisten = await listen("clipboard", (event: any) => {
+  await listen("clipboard", (event: any) => {
     // event.payload 才是实际的结构体
     let timer;
     clearTimeout(timer);
@@ -46,13 +46,13 @@ onMounted(() => {
 async function clipboardTextFn() {
   const clipboardText = await readText();
   state.textList.push(clipboardText);
-  console.log(clipboardText);
+  // console.log(clipboardText);
 }
 
-async function writeTextFn() {
-  await writeText("Tauri is awesome!");
-  const clipboardText = await readText();
-  console.log(clipboardText);
+async function writeTextFn(item: string) {
+  await writeText(item);
+  // const clipboardText = await readText();
+  // console.log(clipboardText);
 }
 </script>
 
